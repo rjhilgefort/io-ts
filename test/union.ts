@@ -90,11 +90,4 @@ describe('union', () => {
       assert.strictEqual(T.encode, t.identity)
     })
   })
-
-  it.skip('should optimize tagged unions', () => {
-    const A = t.type({ type: t.literal('A') })
-    const B = t.type({ type: t.literal('B') })
-    const T = t.union([A, B])
-    assert.strictEqual(T instanceof t.TaggedUnionType, true)
-  })
 })

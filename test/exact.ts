@@ -82,6 +82,12 @@ describe('exact', () => {
         'Invalid value 1 supplied to : ExactType<{ foo: string }>/bar: never',
         'Invalid value true supplied to : ExactType<{ foo: string }>/baz: never'
       ])
+
+      const T3 = t.exact(t.intersection([t.type({ a: t.string }), t.type({ b: t.number })]))
+      assertFailure(T3, {}, [
+        'Invalid value undefined supplied to : ExactType<({ a: string } & { b: number })>/0: { a: string }/a: string',
+        'Invalid value undefined supplied to : ExactType<({ a: string } & { b: number })>/1: { b: number }/b: number'
+      ])
     })
 
     it('should fail validating an invalid value (partial)', () => {
