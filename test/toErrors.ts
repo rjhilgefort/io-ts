@@ -10,7 +10,7 @@ const assertRoundtrip = (type: t.Mixed, value: unknown) => {
   assert.deepEqual(type.decode(value).mapLeft(errors => toErrors(toDecodeError(errors), type)), type.decode(value))
 }
 
-describe('toErrors', () => {
+describe.skip('toErrors', () => {
   it('string', () => {
     const T = t.string
     assertRoundtrip(T, null)

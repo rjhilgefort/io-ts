@@ -31,15 +31,6 @@ const TupleIndexedProduct = t.tuple([t.string, t.number, C], 'IndexedProduct')
 
 const ArrayIndexedProduct = t.array(C)
 
-const E = t.type(
-  {
-    f: t.string
-  },
-  'E'
-)
-
-const IntersectionAnd = t.intersection([C, E], 'IntersectionAnd')
-
 describe('toDecodeError', () => {
   describe('should account for custom messages', () => {
     it('Leaf', () => {
@@ -199,20 +190,22 @@ describe('toDecodeError', () => {
     )
   })
 
-  it('intersection', () => {
-    assertDecodeError(IntersectionAnd, null, and(null, 'IntersectionAnd', [leaf(null, 'C'), leaf(null, 'E')]))
-    assertDecodeError(
-      IntersectionAnd,
-      {},
-      and({}, 'IntersectionAnd', [
-        labeledProduct({}, 'C', {
-          d: leaf(undefined, 'boolean')
-        }),
-        labeledProduct({}, 'E', {
-          f: leaf(undefined, 'string')
-        })
-      ])
-    )
+  it.only('intersection', () => {
+    const T = t.intersection([t.type({ a: t.string }), t.type({ b: t.number })])
+    assertDecodeError(T, null, leaf(null, '({ a: string } & { b: number })'))
+    assertDecodeError(T, {}, and({}, '({ a: string } & { b: number })', []))
+    // assertDecodeError(
+    //   IntersectionAnd,
+    //   {},
+    //   and({}, 'IntersectionAnd', [
+    //     labeledProduct({}, 'C', {
+    //       d: leaf(undefined, 'boolean')
+    //     }),
+    //     labeledProduct({}, 'E', {
+    //       f: leaf(undefined, 'string')
+    //     })
+    //   ])
+    // )
   })
 
   it('readonly', () => {
@@ -247,7 +240,7 @@ describe('toDecodeError', () => {
     )
   })
 
-  it.skip('exact', () => {
+  it('exact', () => {
     const T1 = t.exact(t.type({ a: t.string }))
     assertDecodeError(T1, null, leaf(null, 'ExactType<{ a: string }>'))
     assertDecodeError(
@@ -266,5 +259,13 @@ describe('toDecodeError', () => {
     )
     const T2 = t.exact(t.intersection([t.type({ a: t.string }), t.type({ b: t.number })]))
     assertDecodeError(T2, null, leaf(null, 'ExactType<({ a: string } & { b: number })>'))
+    assertDecodeError(
+      T2,
+      {},
+      labeledProduct({}, 'ExactType<({ a: string } & { b: number })>', {
+        a: leaf(undefined, 'string'),
+        b: leaf(undefined, 'number')
+      })
+    )
   })
 })
