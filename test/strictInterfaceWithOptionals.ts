@@ -20,9 +20,7 @@ describe('strictInterfaceWithOptionals', () => {
   it('should fail validating an invalid value', () => {
     const T = strictInterfaceWithOptionals({ foo: t.string }, { bar: t.string }, 'T')
     assertFailure(T, { foo: 'foo', a: 1 }, ['Invalid value 1 supplied to : T/a: never'])
-    assertFailure(T, { foo: 'foo', bar: 1 }, [
-      'Invalid value 1 supplied to : T/1: Partial<{ bar: string }>/bar: string'
-    ])
+    assertFailure(T, { foo: 'foo', bar: 1 }, ['Invalid value 1 supplied to : T/bar: string'])
   })
 
   it('should return the same reference when serializing', () => {

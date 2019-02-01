@@ -1294,7 +1294,7 @@ export function intersection<CS extends [Mixed, Mixed, ...Array<Mixed>]>(
           const errors: Errors = []
           for (let i = 0; i < len; i++) {
             const codec = codecs[i]
-            const validation = codec.validate(u, appendContext(c, String(i), codec, u))
+            const validation = codec.validate(u, c)
             if (validation.isLeft()) {
               pushAll(errors, validation.value)
             } else {
