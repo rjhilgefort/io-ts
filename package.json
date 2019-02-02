@@ -1,7 +1,7 @@
 {
-  "name": "io-ts",
-  "version": "1.7.1",
-  "description": "TypeScript compatible runtime type system for IO validation",
+  "name": "@rjhilgefort/io-ts",
+  "version": "0.0.1",
+  "description": "@rjhilgefort `io-ts` fork. Version corresponds to `1.7.1`",
   "files": [
     "lib"
   ],
