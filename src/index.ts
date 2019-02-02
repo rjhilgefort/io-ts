@@ -847,12 +847,54 @@ export interface Props {
 export interface TypeC<P extends Props>
   extends InterfaceType<P, { [K in keyof P]: TypeOf<P[K]> }, { [K in keyof P]: OutputOf<P[K]> }, unknown> {}
 
+const instanceToObject = (data: any) =>
+  Object.getOwnPropertyNames(Object.getPrototypeOf(data))
+    .concat(Object.keys(data))
+    .reduce((acc: { [key: string]: any }, prop) => {
+      const val = data[prop];
+      if (!!acc[prop] || prop === 'constructor') {
+        return acc;
+      }
+      acc[prop] = (typeof val === 'function')
+        ? val.bind(acc) // TODO: This ends up in the console as "bound prop" and that's not great
+        : val;
+      return acc;
+    }, {})
+
+const isClassInstance = (x: any) => {
+    if (!x || (typeof x.constructor !== 'function')) {
+        return false
+    }
+    return RegExp('^class').test(x.constructor)
+}
+
 /**
  * @alias `interface`
  * @since 1.0.0
  */
 export const type = <P extends Props>(props: P, name: string = getNameFromProps(props)): TypeC<P> => {
+  // TODO: The thinking here is that I could just tell the rest of this function about all the keys
+  //       and not have to convert the value when doing a `validate` on instances. This would be
+  //       better on performance as we would only go over the value O(n) rather than O(2n)
+  // const keys = Object.getOwnPropertyNames(Object.getPrototypeOf(props))
+  //   .concat(Object.keys(props))
+  //   .filter(x => ![
+  //     '__defineGetter__',
+  //     '__defineSetter__',
+  //     'hasOwnProperty',
+  //     '__lookupGetter__',
+  //     '__lookupSetter__',
+  //     'isPrototypeOf',
+  //     'propertyIsEnumerable',
+  //     'toString',
+  //     'valueOf',
+  //     '__proto__',
+  //     'toLocaleString',
+  //     'constructor',
+  //   // @ts-ignore
+  //   ].includes(x))
   const keys = Object.keys(props)
+
   const types = keys.map(key => props[key])
   const len = keys.length
   return new InterfaceType(
@@ -870,7 +912,8 @@ export const type = <P extends Props>(props: P, name: string = getNameFromProps(
       return true
     },
     (u, c) => {
-      const unknownRecordValidation = UnknownRecord.validate(u, c)
+      const normalizedValue = isClassInstance(u) ? instanceToObject(u) : u;
+      const unknownRecordValidation = UnknownRecord.validate(normalizedValue, c)
       if (unknownRecordValidation.isLeft()) {
         return unknownRecordValidation
       }
@@ -901,7 +944,7 @@ export const type = <P extends Props>(props: P, name: string = getNameFromProps(
           }
         }
       }
-      return errors.length ? failures(errors) : success(a as any)
+      return errors.length ? failures(errors) : success(u as any)
     },
     useIdentity(types, len)
       ? identity
