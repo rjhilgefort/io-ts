@@ -847,19 +847,38 @@ export interface Props {
 export interface TypeC<P extends Props>
   extends InterfaceType<P, { [K in keyof P]: TypeOf<P[K]> }, { [K in keyof P]: OutputOf<P[K]> }, unknown> {}
 
-const instanceToObject = (data: any) =>
-  Object.getOwnPropertyNames(Object.getPrototypeOf(data))
-    .concat(Object.keys(data))
-    .reduce((acc: { [key: string]: any }, prop) => {
-      const val = data[prop];
-      if (!!acc[prop] || prop === 'constructor') {
-        return acc;
+const { getOwnPropertyNames, getPrototypeOf, keys } = Object
+const isFunction = (x: any) => typeof x === 'function'
+const isNil = (x: any) => x === undefined || x === null
+const isNotNil = (x: any) => !isNil(x)
+
+const instanceToObject = (data: any) => {
+  let obj: { [key: string]: any } = {}
+
+  getOwnPropertyNames(data).forEach((prop) => {
+    if (prop === 'constructor') {
+      return
+    }
+    obj[prop] = isFunction(data[prop])
+      ? data[prop].bind(obj)
+      : data[prop]
+  })
+
+  const inherited = getPrototypeOf(data)
+  if (isNotNil(inherited)) {
+    keys(instanceToObject(inherited)).forEach((prop) => {
+      if (isNotNil(obj[prop]) || prop === 'constructor') {
+        return
       }
-      acc[prop] = (typeof val === 'function')
-        ? val.bind(acc) // TODO: This ends up in the console as "bound prop" and that's not great
-        : val;
-      return acc;
-    }, {})
+
+      obj[prop] = isFunction(inherited[prop])
+        ? inherited[prop].bind(obj)
+        : inherited[prop]
+    })
+  }
+
+  return obj
+}
 
 const isClassInstance = (x: any) => {
     if (!x || (typeof x.constructor !== 'function')) {
